@@ -14,6 +14,7 @@ export const TRANSLATIONS = {
     navMyFarm: 'My Farm & Profile',
     navDataSource: 'Data Sources & CSV',
     navHelp: 'Help & Knowledge',
+    navPlans: 'Plans & Pricing',
 
     // Header
     demoBadge: 'Demo Mode (Agmarknet)',
@@ -23,6 +24,9 @@ export const TRANSLATIONS = {
     notifications: 'Notifications',
     profile: 'Farmer Profile',
     changeLanguage: 'हिंदी',
+    planBadgeFree: 'Free Kisan',
+    planBadgePlus: 'Kisan Plus ⭐',
+    planBadgeFpo: 'FPO Group 🏢',
 
     // Dashboard
     namaste: 'Namaste, Kisan Bhai!',
@@ -146,6 +150,47 @@ export const TRANSLATIONS = {
     saveProfileBtn: 'Save Profile Changes',
     profileSavedSuccess: 'Profile saved successfully!',
 
+    // Subscription & Plans
+    subModalTitle: 'Choose Your FasalSetu Plan',
+    subModalSubtitle: 'Fair, transparent pricing for Indian farmers and cooperatives. No hidden charges.',
+    billingMonthly: 'Monthly Billing',
+    billingYearly: 'Annual Plan (Save 14%)',
+    continueFree: 'Continue with Free Plan',
+    currentPlan: 'Your Current Plan',
+    upgradeToPlus: 'Upgrade to Kisan Plus',
+    upgradeToFpo: 'Choose FPO Group Plan',
+    manageSubscription: 'Manage Subscription',
+    comparisonMatrixTitle: 'Detailed Plan Feature Comparison',
+    activePlanStatus: 'Active Plan',
+    cancelledPlanStatus: 'Auto-Renewal Cancelled',
+    expiredPlanStatus: 'Subscription Expired',
+    renewalDateLabel: 'Next Renewal / Expiry',
+    dailyLimitNotice: 'Free Tier Daily Comparisons',
+    dailyLimitExceeded: 'You have reached the 5 daily comparisons on Free Kisan. Resets tomorrow, or upgrade to Plus for unlimited comparisons.',
+    managePlanBtn: 'Manage Plan & Billing',
+
+    // Checkout
+    checkoutTitle: 'Secure Subscription Checkout',
+    checkoutTestNotice: 'Sandbox Test Mode (Razorpay Test Gateway)',
+    orderSummary: 'Order Summary',
+    planSelected: 'Selected Plan',
+    billingCycle: 'Billing Interval',
+    totalPayable: 'Total Payable (Incl. taxes)',
+    testPaySuccessBtn: 'Complete Test Payment (Simulate Success)',
+    testPayFailureBtn: 'Simulate Bank Decline (Test Failure)',
+    paymentSuccessTitle: 'Subscription Activated Successfully!',
+    paymentSuccessMsg: 'Your plan has been upgraded with all premium agricultural capabilities.',
+    paymentFailedTitle: 'Payment Could Not Be Completed',
+    paymentFailedMsg: 'The issuing bank declined this transaction. No amount was deducted.',
+    retryPayment: 'Try Again',
+    transactionIdLabel: 'Transaction ID',
+    supportContact: 'Kisan Support: 1800-180-1551 (Toll-Free) or help@fasalsetu.in',
+
+    // Ads
+    sponsoredAdLabel: 'Sponsored Agri Partner',
+    adDisclosure: 'Sponsored listings do not influence mandi rates, distances, or algorithm rankings.',
+    removeAdsWithPlus: 'Remove all ads with Kisan Plus (₹29/mo)',
+
     // Common
     rupees: '₹',
     perQuintal: '/q',
@@ -166,6 +211,7 @@ export const TRANSLATIONS = {
     navMyFarm: 'मेरा खेत व प्रोफाइल',
     navDataSource: 'डेटा स्रोत व CSV',
     navHelp: 'मदद एवं जानकारी',
+    navPlans: 'प्लान व सब्सक्रिप्शन',
 
     // Header
     demoBadge: 'नमूना डेटा (Agmarknet)',
@@ -175,6 +221,9 @@ export const TRANSLATIONS = {
     notifications: 'सूचनाएं',
     profile: 'किसान प्रोफाइल',
     changeLanguage: 'English',
+    planBadgeFree: 'फ्री किसान',
+    planBadgePlus: 'किसान प्लस ⭐',
+    planBadgeFpo: 'FPO समूह 🏢',
 
     // Dashboard
     namaste: 'नमस्ते, किसान भाई!',
@@ -297,6 +346,47 @@ export const TRANSLATIONS = {
     farmerName: 'किसान भाई / FPO का नाम',
     saveProfileBtn: 'प्रोफाइल सुरक्षित करें',
     profileSavedSuccess: 'प्रोफाइल सफलतापूर्वक सुरक्षित हो गई!',
+
+    // Subscription & Plans
+    subModalTitle: 'अपनी पसंद का फसलसेतु प्लान चुनें',
+    subModalSubtitle: 'भारतीय किसान भाइयों और FPO के लिए पारदर्शी व किफायती योजनाएं।',
+    billingMonthly: 'मासिक बिलिंग',
+    billingYearly: 'वार्षिक प्लान (14% छूट)',
+    continueFree: 'फ्री प्लान के साथ आगे बढ़ें',
+    currentPlan: 'आपका वर्तमान प्लान',
+    upgradeToPlus: 'किसान प्लस में अपग्रेड करें',
+    upgradeToFpo: 'FPO ग्रुप प्लान चुनें',
+    manageSubscription: 'सब्सक्रिप्शन प्रबंधन',
+    comparisonMatrixTitle: 'विस्तृत प्लान सुविधा तुलना',
+    activePlanStatus: 'सक्रिय प्लान',
+    cancelledPlanStatus: 'स्वतः रिन्यूअल रद्द है',
+    expiredPlanStatus: 'प्लान समाप्त हो गया',
+    renewalDateLabel: 'अगली रिन्यूअल / समाप्ति तिथि',
+    dailyLimitNotice: 'फ्री प्लान दैनिक तुलना सीमा',
+    dailyLimitExceeded: 'आपने आज की 5 फ्री तुलनाएं पूरी कर ली हैं। मध्यरात्रि में रीसेट होगी, अथवा असीमित तुलना के लिए प्लस लें।',
+    managePlanBtn: 'प्लान व बिलिंग देखें',
+
+    // Checkout
+    checkoutTitle: 'सुरक्षित सब्सक्रिप्शन चेकआउट',
+    checkoutTestNotice: 'सैंडबॉक्स टेस्ट मोड (रेज़रपे टेस्ट गेटवे)',
+    orderSummary: 'ऑर्डर विवरण',
+    planSelected: 'चुना गया प्लान',
+    billingCycle: 'बिलिंग चक्र',
+    totalPayable: 'कुल देय राशि (करों सहित)',
+    testPaySuccessBtn: 'सफल भुगतान टेस्ट करें (Simulate Success)',
+    testPayFailureBtn: 'बैंक अस्वीकृति टेस्ट करें (Simulate Failure)',
+    paymentSuccessTitle: 'सब्सक्रिप्शन सफलतापूर्वक सक्रिय!',
+    paymentSuccessMsg: 'आपके खाते में सभी प्रीमियम सुविधाएं तुरंत सक्रिय कर दी गई हैं।',
+    paymentFailedTitle: 'भुगतान पूरा नहीं हो सका',
+    paymentFailedMsg: 'बैंक द्वारा लेनदेन अस्वीकार कर दिया गया। खाते से कोई राशि नहीं कटी।',
+    retryPayment: 'पुनः प्रयास करें',
+    transactionIdLabel: 'लेनदेन आईडी (Transaction ID)',
+    supportContact: 'किसान सहायता: 1800-180-1551 (टोल-फ्री) या help@fasalsetu.in',
+
+    // Ads
+    sponsoredAdLabel: 'प्रायोजित कृषि सेवा (विज्ञापन)',
+    adDisclosure: 'प्रायोजित विज्ञापन मंडी भाव या शुद्ध बचत की गणना को बिल्कुल प्रभावित नहीं करते।',
+    removeAdsWithPlus: 'किसान प्लस के साथ विज्ञापन हटाएं (₹29/माह)',
 
     // Common
     rupees: '₹',

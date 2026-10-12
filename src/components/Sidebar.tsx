@@ -1,5 +1,5 @@
 import React from 'react';
-import { Language } from '../types';
+import { Language, UserSubscription } from '../types';
 import { getTranslation } from '../services/i18n';
 import { 
   LayoutDashboard, 
@@ -10,7 +10,9 @@ import {
   Tractor, 
   Database, 
   HelpCircle,
-  ChevronRight
+  ChevronRight,
+  CreditCard,
+  Sparkles
 } from 'lucide-react';
 
 export type NavigationTab = 
@@ -20,6 +22,7 @@ export type NavigationTab =
   | 'map' 
   | 'saved' 
   | 'myfarm' 
+  | 'plans'
   | 'datasource' 
   | 'help';
 
@@ -28,6 +31,7 @@ interface SidebarProps {
   onSelectTab: (tab: NavigationTab) => void;
   language: Language;
   savedCount: number;
+  subscription: UserSubscription;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -35,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
   language,
   savedCount,
+  subscription,
 }) => {
   const t = getTranslation(language);
 
@@ -45,6 +50,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'map' as NavigationTab, label: t.mapTitle, icon: MapPin },
     { id: 'saved' as NavigationTab, label: t.navSaved, icon: Bookmark, count: savedCount },
     { id: 'myfarm' as NavigationTab, label: t.navMyFarm, icon: Tractor },
+    { 
+      id: 'plans' as NavigationTab, 
+      label: t.navPlans, 
+      icon: CreditCard, 
+      badge: subscription.plan === 'free' ? 'Upgrade' : (subscription.plan === 'plus' ? 'Plus ⭐' : 'FPO') 
+    },
     { id: 'datasource' as NavigationTab, label: t.navDataSource, icon: Database },
     { id: 'help' as NavigationTab, label: t.navHelp, icon: HelpCircle },
   ];
@@ -75,7 +86,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               <div className="flex items-center gap-1.5">
                 {item.badge && !isActive && (
-                  <span className="text-[10px] font-bold bg-[#E9B949]/20 text-[#8B6848] px-1.5 py-0.5 rounded-md">
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                    item.id === 'plans' && subscription.plan === 'free'
+                      ? 'bg-[#E9B949] text-[#26352A]'
+                      : 'bg-[#E9B949]/20 text-[#8B6848]'
+                  }`}>
                     {item.badge}
                   </span>
                 )}

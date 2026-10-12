@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { Language, NotificationItem, FarmerProfile } from '../types';
+import { Language, NotificationItem, FarmerProfile, UserSubscription } from '../types';
 import { getTranslation } from '../services/i18n';
 import { DataSourceStatus } from '../services/dataService';
 import { 
   Sprout, 
   Globe2, 
   Bell, 
-  User, 
   Database, 
-  Check, 
-  TrendingUp, 
-  AlertCircle,
+  Sparkles,
   Menu,
   X
 } from 'lucide-react';
@@ -26,6 +23,8 @@ interface NavbarProps {
   onOpenProfile: () => void;
   onToggleMobileMenu: () => void;
   isMobileMenuOpen: boolean;
+  subscription: UserSubscription;
+  onOpenPlans: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -39,6 +38,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenProfile,
   onToggleMobileMenu,
   isMobileMenuOpen,
+  subscription,
+  onOpenPlans,
 }) => {
   const t = getTranslation(language);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
@@ -71,7 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {language === 'hi' ? 'फसलसेतु' : 'FasalSetu'}
                 </span>
                 <span className="text-[10px] font-semibold bg-[#EBF5EE] text-[#2F6B3F] px-1.5 py-0.5 rounded-full border border-[#C4D7BC]">
-                  AI Beta
+                  AI
                 </span>
               </div>
               <p className="text-[11px] text-[#6B786D] hidden sm:block leading-none mt-0.5">
@@ -82,11 +83,44 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Right Action Icons */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Subscription Tier Pill */}
+          <button
+            onClick={onOpenPlans}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+              subscription.plan === 'plus'
+                ? 'bg-gradient-to-r from-[#EBF5EE] to-[#FFFDF5] text-[#2F6B3F] border-[#79A95A] hover:shadow-xs'
+                : subscription.plan === 'fpo'
+                ? 'bg-blue-50 text-blue-900 border-blue-200 hover:bg-blue-100'
+                : 'bg-[#F3F8EF] text-[#26352A] border-[#E1E9DC] hover:bg-[#E4EEDC]'
+            }`}
+            title="View or Upgrade Subscription Plan"
+          >
+            {subscription.plan === 'plus' ? (
+              <>
+                <Sparkles className="w-3.5 h-3.5 text-[#E9B949]" />
+                <span className="hidden sm:inline">{t.planBadgePlus}</span>
+                <span className="sm:hidden font-extrabold text-[#2F6B3F]">Plus ⭐</span>
+              </>
+            ) : subscription.plan === 'fpo' ? (
+              <>
+                <span className="text-xs">🏢</span>
+                <span className="hidden sm:inline">{t.planBadgeFpo}</span>
+                <span className="sm:hidden font-extrabold">FPO</span>
+              </>
+            ) : (
+              <>
+                <span className="text-xs">🌾</span>
+                <span className="hidden sm:inline">{t.planBadgeFree}</span>
+                <span className="sm:hidden text-[11px] text-[#6B786D]">Free</span>
+              </>
+            )}
+          </button>
+
           {/* Data Source Pill */}
           <button
             onClick={onOpenDataSourceModal}
-            className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition-all ${
               dataStatus.isDemo
                 ? 'bg-[#FFFDF5] text-[#8B6848] border-[#E9B949]/50 hover:bg-[#FFF9E6]'
                 : dataStatus.mode === 'custom_csv'
@@ -96,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="Click to manage data source or import CSV"
           >
             <Database className="w-3.5 h-3.5 text-[#E9B949]" />
-            <span className="truncate max-w-[140px]">
+            <span className="truncate max-w-[130px]">
               {dataStatus.isDemo ? t.demoBadge : dataStatus.mode === 'custom_csv' ? t.csvBadge : t.liveBadge}
             </span>
           </button>
@@ -104,7 +138,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Language Switcher */}
           <button
             onClick={toggleLanguage}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#F3F8EF] hover:bg-[#E4EEDC] text-[#2F6B3F] border border-[#E1E9DC] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#F3F8EF] hover:bg-[#E4EEDC] text-[#2F6B3F] border border-[#E1E9DC] transition-colors"
             title="Switch Language"
           >
             <Globe2 className="w-3.5 h-3.5 text-[#2F6B3F]" />
@@ -115,7 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowNotifMenu(!showNotifMenu)}
-              className="relative p-2 rounded-lg text-[#26352A] hover:bg-[#F3F8EF] border border-transparent hover:border-[#E1E9DC] transition-all"
+              className="relative p-2 rounded-xl text-[#26352A] hover:bg-[#F3F8EF] border border-transparent hover:border-[#E1E9DC] transition-all"
               aria-label="Notifications"
             >
               <Bell className="w-4.5 h-4.5 text-[#26352A]" />
@@ -125,7 +159,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             {showNotifMenu && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-[#E1E9DC] p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-[#E1E9DC] p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
                 <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E1E9DC]">
                   <div className="flex items-center gap-1.5">
                     <Bell className="w-4 h-4 text-[#2F6B3F]" />
@@ -143,7 +177,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div
                       key={notif.id}
                       onClick={() => onMarkNotificationRead(notif.id)}
-                      className={`p-2.5 rounded-lg text-xs cursor-pointer transition-colors ${
+                      className={`p-2.5 rounded-xl text-xs cursor-pointer transition-colors ${
                         notif.read ? 'bg-[#F3F8EF]/50 hover:bg-[#F3F8EF]' : 'bg-[#EBF5EE] border-l-3 border-[#2F6B3F]'
                       }`}
                     >
@@ -175,14 +209,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Farmer Profile Chip */}
           <button
             onClick={onOpenProfile}
-            className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg bg-[#F3F8EF] hover:bg-[#E4EEDC] border border-[#E1E9DC] transition-all"
+            className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-[#F3F8EF] hover:bg-[#E4EEDC] border border-[#E1E9DC] transition-all"
             title="View or Edit Farmer Profile"
           >
             <div className="w-6 h-6 rounded-full bg-[#79A95A] text-white flex items-center justify-center text-xs font-semibold">
               {profile.name ? profile.name.charAt(0).toUpperCase() : 'K'}
             </div>
-            <div className="hidden md:block text-left">
-              <p className="text-xs font-semibold text-[#26352A] leading-tight truncate max-w-[110px]">
+            <div className="hidden lg:block text-left">
+              <p className="text-xs font-semibold text-[#26352A] leading-tight truncate max-w-[100px]">
                 {profile.name || 'Kisan Bhai'}
               </p>
               <p className="text-[10px] text-[#6B786D] leading-none capitalize">

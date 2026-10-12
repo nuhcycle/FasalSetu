@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ComparisonInput, Crop, Language, WeightUnit } from '../../types';
+import { ComparisonInput, Crop, Language, WeightUnit, UserSubscription } from '../../types';
 import { CROPS } from '../../data/crops';
 import { STATES_AND_DISTRICTS } from '../../data/locations';
 import { VEHICLE_OPTIONS } from '../../data/vehicles';
@@ -9,10 +9,10 @@ import {
   MapPin, 
   Truck, 
   Settings2, 
-  RotateCcw, 
   ChevronDown, 
   ChevronUp,
-  Info
+  AlertTriangle,
+  Sparkles
 } from 'lucide-react';
 
 interface ComparisonFormProps {
@@ -20,6 +20,8 @@ interface ComparisonFormProps {
   onChangeInput: (newInput: ComparisonInput) => void;
   onCalculate: () => void;
   language: Language;
+  subscription: UserSubscription;
+  onOpenUpgrade: () => void;
 }
 
 export const ComparisonForm: React.FC<ComparisonFormProps> = ({
@@ -27,6 +29,8 @@ export const ComparisonForm: React.FC<ComparisonFormProps> = ({
   onChangeInput,
   onCalculate,
   language,
+  subscription,
+  onOpenUpgrade,
 }) => {
   const t = getTranslation(language);
   const [showAdvancedCosts, setShowAdvancedCosts] = useState(false);
@@ -34,6 +38,8 @@ export const ComparisonForm: React.FC<ComparisonFormProps> = ({
   // Active state's districts
   const selectedStateObj = STATES_AND_DISTRICTS.find(s => s.id === input.state) || STATES_AND_DISTRICTS[0];
   const districts = selectedStateObj.districts;
+
+  const isLimitReached = subscription.plan === 'free' && subscription.dailyComparisonsUsed >= 5;
 
   const handleCropChange = (cropId: string) => {
     onChangeInput({ ...input, cropId });
@@ -58,9 +64,17 @@ export const ComparisonForm: React.FC<ComparisonFormProps> = ({
     });
   };
 
+  const handleCalculateClick = () => {
+    if (isLimitReached) {
+      onOpenUpgrade();
+      return;
+    }
+    onCalculate();
+  };
+
   return (
     <div className="bg-white rounded-3xl border border-[#E1E9DC] p-5 sm:p-6 shadow-sm mb-6">
-      <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#E1E9DC]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-[#E1E9DC] gap-2">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-[#EBF5EE] text-[#2F6B3F]">
             <Scale className="w-5 h-5" />
@@ -70,7 +84,49 @@ export const ComparisonForm: React.FC<ComparisonFormProps> = ({
             <p className="text-xs text-[#6B786D]">{t.subtitle}</p>
           </div>
         </div>
+
+        {/* Free Plan Daily Usage Counter Pill */}
+        {subscription.plan === 'free' ? (
+          <div className="flex items-center gap-2 text-xs self-start sm:self-auto">
+            <span className={`px-2.5 py-1 rounded-xl font-bold border ${
+              isLimitReached 
+                ? 'bg-amber-100 text-amber-900 border-amber-300' 
+                : 'bg-[#F3F8EF] text-[#26352A] border-[#E1E9DC]'
+            }`}>
+              {subscription.dailyComparisonsUsed} / 5 comparisons used today
+            </span>
+            <button
+              type="button"
+              onClick={onOpenUpgrade}
+              className="text-[#2F6B3F] font-bold text-xs hover:underline flex items-center gap-0.5"
+            >
+              <Sparkles className="w-3 h-3 text-[#E9B949]" />
+              <span>Get Unlimited</span>
+            </button>
+          </div>
+        ) : (
+          <span className="text-xs font-bold text-[#2F6B3F] bg-[#EBF5EE] px-2.5 py-1 rounded-xl border border-[#79A95A] self-start sm:self-auto">
+            ⭐ Unlimited Comparisons Active
+          </span>
+        )}
       </div>
+
+      {/* Quota Reached Alert */}
+      {isLimitReached && (
+        <div className="mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold">{t.dailyLimitExceeded}</p>
+            <button
+              type="button"
+              onClick={onOpenUpgrade}
+              className="mt-1 font-bold text-[#2F6B3F] underline inline-block"
+            >
+              {t.upgradeToPlus} (₹29/mo) →
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-5">
         {/* 1. Crop Selector (Visual buttons / quick pills) */}
@@ -347,10 +403,14 @@ export const ComparisonForm: React.FC<ComparisonFormProps> = ({
         <div className="pt-2 flex items-center justify-end gap-3">
           <button
             type="button"
-            onClick={onCalculate}
-            className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-[#2F6B3F] hover:bg-[#22512F] text-white font-bold text-sm shadow-md shadow-[#2F6B3F]/25 hover:shadow-lg transition-all active:scale-95"
+            onClick={handleCalculateClick}
+            className={`w-full sm:w-auto px-8 py-3 rounded-2xl font-bold text-sm shadow-md transition-all active:scale-95 ${
+              isLimitReached
+                ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                : 'bg-[#2F6B3F] hover:bg-[#22512F] text-white shadow-[#2F6B3F]/25 hover:shadow-lg'
+            }`}
           >
-            {t.calculateBtn}
+            {isLimitReached ? 'Daily Limit Reached - Upgrade' : t.calculateBtn}
           </button>
         </div>
       </div>

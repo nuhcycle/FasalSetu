@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ComparisonResult, Language } from '../../types';
+import { ComparisonResult, Language, UserSubscription } from '../../types';
 import { getTranslation } from '../../services/i18n';
 import { formatINR } from '../../services/calculationEngine';
+import { SponsoredAgriCard } from '../Ads/SponsoredAgriCard';
 import { 
   ArrowUpDown, 
   LayoutGrid, 
@@ -13,9 +14,9 @@ import {
   ShieldAlert, 
   AlertCircle,
   HelpCircle,
-  CheckCircle2,
   Bookmark,
-  Share2
+  Download,
+  Lock
 } from 'lucide-react';
 
 interface ComparisonResultsProps {
@@ -24,6 +25,8 @@ interface ComparisonResultsProps {
   onOpenCalculationModal: (result: ComparisonResult) => void;
   onSaveMandi: (id: string) => void;
   savedMandiIds: string[];
+  subscription: UserSubscription;
+  onOpenUpgrade: () => void;
 }
 
 export type SortField = 'netProceeds' | 'modalPrice' | 'distance' | 'transportCost' | 'freshness';
@@ -34,6 +37,8 @@ export const ComparisonResults: React.FC<ComparisonResultsProps> = ({
   onOpenCalculationModal,
   onSaveMandi,
   savedMandiIds,
+  subscription,
+  onOpenUpgrade,
 }) => {
   const t = getTranslation(language);
   const [sortField, setSortField] = useState<SortField>('netProceeds');
@@ -57,6 +62,28 @@ export const ComparisonResults: React.FC<ComparisonResultsProps> = ({
     }
   });
 
+  const handleExportCsv = () => {
+    if (subscription.plan !== 'fpo') {
+      onOpenUpgrade();
+      return;
+    }
+
+    // Export CSV for FPO tier
+    const headers = 'Mandi,District,State,Variety,DistanceKm,ModalPrice_Per_Q,GrossProceeds,TransportCost,TotalDeductions,EstimatedNetProceeds\n';
+    const rows = sortedResults.map(r => 
+      `"${r.mandi.mandiName}","${r.mandi.district}","${r.mandi.state}","${r.mandi.variety}",${r.distanceKm},${r.reportedModalPricePerQuintal},${r.grossProceeds},${r.transportCost},${r.totalSellingCosts},${r.estimatedNetProceeds}`
+    ).join('\n');
+
+    const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `FasalSetu_Mandi_Comparison_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (results.length === 0) {
     return (
       <div className="bg-white rounded-3xl border border-[#E1E9DC] p-10 text-center">
@@ -77,14 +104,37 @@ export const ComparisonResults: React.FC<ComparisonResultsProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Controls Bar: Sort & View Toggle */}
+      {/* Controls Bar: Sort & View Toggle & FPO Export */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#E1E9DC]">
         <div>
           <h2 className="text-base font-bold text-[#26352A]">{t.resultsTitle}</h2>
           <p className="text-xs text-[#6B786D]">{t.resultsSubtitle}</p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* FPO Export Button */}
+          <button
+            onClick={handleExportCsv}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
+              subscription.plan === 'fpo'
+                ? 'bg-[#EBF5EE] text-[#2F6B3F] border-[#79A95A] hover:bg-[#D8ECDD]'
+                : 'bg-white text-[#6B786D] border-[#E1E9DC] hover:text-[#26352A]'
+            }`}
+            title={subscription.plan === 'fpo' ? 'Export to CSV' : 'Upgrade to FPO Plan to Export CSV'}
+          >
+            {subscription.plan === 'fpo' ? (
+              <Download className="w-3.5 h-3.5 text-[#2F6B3F]" />
+            ) : (
+              <Lock className="w-3.5 h-3.5 text-[#E9B949]" />
+            )}
+            <span>Export CSV</span>
+            {subscription.plan !== 'fpo' && (
+              <span className="text-[9px] bg-blue-50 text-blue-700 px-1 py-0.2 rounded font-extrabold">
+                FPO
+              </span>
+            )}
+          </button>
+
           {/* Sort Dropdown */}
           <div className="flex items-center gap-1.5 text-xs text-[#6B786D]">
             <ArrowUpDown className="w-3.5 h-3.5 text-[#2F6B3F]" />
@@ -340,6 +390,13 @@ export const ComparisonResults: React.FC<ComparisonResultsProps> = ({
           </div>
         </div>
       )}
+
+      {/* Contextual Sponsored Agri Partner Card (Rendered ONLY for Free Kisan tier) */}
+      <SponsoredAgriCard
+        subscription={subscription}
+        language={language}
+        adIndex={1}
+      />
     </div>
   );
 };

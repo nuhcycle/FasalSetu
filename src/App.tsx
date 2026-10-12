@@ -5,17 +5,20 @@ import {
   ComparisonResult, 
   MandiRecord, 
   FarmerProfile, 
-  NotificationItem 
+  NotificationItem,
+  UserSubscription,
+  SubscriptionTier,
+  BillingCycle
 } from './types';
 import { CROPS } from './data/crops';
-import { STATES_AND_DISTRICTS, findDistrictCoordinates } from './data/locations';
-import { VEHICLE_OPTIONS } from './data/vehicles';
+import { findDistrictCoordinates } from './data/locations';
 import { dataService, DataSourceStatus } from './services/dataService';
 import { storageService } from './services/storageService';
+import { subscriptionService } from './services/subscriptionService';
 import { compareAndRankMandis } from './services/calculationEngine';
 import { getTranslation } from './services/i18n';
 
-// Components
+// Core Components
 import { Navbar } from './components/Navbar';
 import { Sidebar, NavigationTab } from './components/Sidebar';
 import { BottomNav } from './components/BottomNav';
@@ -32,12 +35,19 @@ import { MyFarmView } from './components/MyFarm/MyFarmView';
 import { DataSourceModal } from './components/DataImport/DataSourceModal';
 import { HelpFeedbackModal } from './components/Help/HelpFeedbackModal';
 
+// Subscription & Ads Components
+import { DashboardBannerAd } from './components/Ads/DashboardBannerAd';
+import { SubscriptionPlansView } from './components/Subscription/SubscriptionPlansView';
+import { CheckoutModal } from './components/Subscription/CheckoutModal';
+import { SubscriptionOnboardingModal } from './components/Subscription/SubscriptionOnboardingModal';
+
 export const App: React.FC = () => {
   // 1. Persistent State
   const [language, setLanguage] = useState<Language>(() => storageService.getLanguage());
   const [profile, setProfile] = useState<FarmerProfile>(() => storageService.getProfile());
   const [savedMandiIds, setSavedMandiIds] = useState<string[]>(() => storageService.getSavedMandiIds());
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => storageService.getNotifications());
+  const [subscription, setSubscription] = useState<UserSubscription>(() => subscriptionService.getSubscription());
 
   // 2. Navigation State
   const [currentTab, setCurrentTab] = useState<NavigationTab>('overview');
@@ -48,7 +58,13 @@ export const App: React.FC = () => {
   const [allMandis, setAllMandis] = useState<MandiRecord[]>([]);
   const [isDataSourceModalOpen, setIsDataSourceModalOpen] = useState(false);
 
-  // 4. Calculation & Comparison State
+  // 4. Subscription & Checkout Modal States
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [checkoutTier, setCheckoutTier] = useState<SubscriptionTier>('plus');
+  const [checkoutCycle, setCheckoutCycle] = useState<BillingCycle>('monthly');
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => !profile.isOnboarded);
+
+  // 5. Calculation State
   const [selectedCalculation, setSelectedCalculation] = useState<ComparisonResult | null>(null);
 
   const initialCropId = profile.primaryCrops?.[0] || 'onion';
@@ -80,7 +96,11 @@ export const App: React.FC = () => {
     refreshMandis();
   }, []);
 
-  // Update language in storage
+  const refreshSubscription = () => {
+    setSubscription(subscriptionService.getSubscription());
+  };
+
+  // Language change
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
     storageService.setLanguage(lang);
@@ -103,6 +123,11 @@ export const App: React.FC = () => {
 
   // Toggle Saved Mandi
   const handleToggleSaved = (id: string) => {
+    // If on Free plan and already has 2 saved mandis, prompt upgrade to Kisan Plus
+    if (subscription.plan === 'free' && !savedMandiIds.includes(id) && savedMandiIds.length >= 2) {
+      handleOpenCheckout('plus', 'monthly');
+      return;
+    }
     const updated = storageService.toggleSavedMandi(id);
     setSavedMandiIds(updated);
   };
@@ -111,6 +136,57 @@ export const App: React.FC = () => {
   const handleMarkNotificationRead = (id: string) => {
     const updated = storageService.markNotificationAsRead(id);
     setNotifications(updated);
+  };
+
+  // Open checkout modal
+  const handleOpenCheckout = (tier: SubscriptionTier, cycle: BillingCycle) => {
+    setCheckoutTier(tier);
+    setCheckoutCycle(cycle);
+    setIsCheckoutOpen(true);
+  };
+
+  // Checkout successful
+  const handleCheckoutSuccess = () => {
+    refreshSubscription();
+    // Notification for successful upgrade
+    const newNotif: NotificationItem = {
+      id: `sub_success_${Date.now()}`,
+      titleEn: 'Subscription Activated',
+      titleHi: 'सब्सक्रिप्शन सक्रिय हो गया',
+      messageEn: `Welcome to ${checkoutTier === 'plus' ? 'Kisan Plus' : 'FPO Group'}! Enjoy ad-free and unlimited comparisons.`,
+      messageHi: `${checkoutTier === 'plus' ? 'किसान प्लस' : 'FPO ग्रुप'} में स्वागत है! असीमित तुलना व विज्ञापन-मुक्त अनुभव का आनंद लें।`,
+      type: 'market_update',
+      date: 'Just now',
+      read: false,
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  // Onboarding Plan Selection
+  const handleOnboardingSelectPlan = (tier: SubscriptionTier, cycle: BillingCycle) => {
+    setIsOnboardingOpen(false);
+    const updatedProfile = { ...profile, isOnboarded: true };
+    setProfile(updatedProfile);
+    storageService.saveProfile(updatedProfile);
+    handleOpenCheckout(tier, cycle);
+  };
+
+  const handleOnboardingContinueFree = () => {
+    setIsOnboardingOpen(false);
+    const updatedProfile = { ...profile, isOnboarded: true };
+    setProfile(updatedProfile);
+    storageService.saveProfile(updatedProfile);
+  };
+
+  // Calculate execution with quota enforcement
+  const handlePerformCalculation = () => {
+    const check = subscriptionService.canPerformComparison();
+    if (!check.allowed) {
+      handleOpenCheckout('plus', 'monthly');
+      return;
+    }
+    subscriptionService.recordComparison();
+    refreshSubscription();
   };
 
   // Farmer's Origin Coordinates
@@ -147,6 +223,7 @@ export const App: React.FC = () => {
       state: mandi.state.toLowerCase().replace(/\s+/g, '_'),
       district: mandi.district.toLowerCase().replace(/\s+/g, '_'),
     }));
+    handlePerformCalculation();
     setCurrentTab('compare');
   };
 
@@ -166,6 +243,8 @@ export const App: React.FC = () => {
         onOpenProfile={() => handleSelectTab('myfarm')}
         onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         isMobileMenuOpen={isMobileMenuOpen}
+        subscription={subscription}
+        onOpenPlans={() => handleSelectTab('plans')}
       />
 
       {/* Main Layout Container */}
@@ -176,6 +255,7 @@ export const App: React.FC = () => {
           onSelectTab={handleSelectTab}
           language={language}
           savedCount={savedMandiIds.length}
+          subscription={subscription}
         />
 
         {/* Mobile Navigation Drawer */}
@@ -208,6 +288,14 @@ export const App: React.FC = () => {
                     }`}
                   >
                     {t.navCompare}
+                  </button>
+                  <button
+                    onClick={() => handleSelectTab('plans')}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium ${
+                      currentTab === 'plans' ? 'bg-[#2F6B3F] text-white font-bold' : 'text-[#26352A]'
+                    }`}
+                  >
+                    {t.navPlans} ({subscription.plan.toUpperCase()})
                   </button>
                   <button
                     onClick={() => handleSelectTab('trends')}
@@ -281,6 +369,13 @@ export const App: React.FC = () => {
                 onNavigate={tab => handleSelectTab(tab)}
               />
 
+              {/* Reserved Dashboard Banner Ad (Hidden completely for paid subscribers) */}
+              <DashboardBannerAd
+                subscription={subscription}
+                language={language}
+                onUpgradeClick={() => handleOpenCheckout('plus', 'monthly')}
+              />
+
               {/* 4 Summary Metric Cards */}
               <QuickMarketSummary
                 selectedCrop={selectedCrop}
@@ -319,8 +414,13 @@ export const App: React.FC = () => {
                 <ComparisonForm
                   input={comparisonInput}
                   onChangeInput={setComparisonInput}
-                  onCalculate={() => handleSelectTab('compare')}
+                  onCalculate={() => {
+                    handlePerformCalculation();
+                    handleSelectTab('compare');
+                  }}
                   language={language}
+                  subscription={subscription}
+                  onOpenUpgrade={() => handleOpenCheckout('plus', 'monthly')}
                 />
               </div>
             </div>
@@ -332,8 +432,10 @@ export const App: React.FC = () => {
               <ComparisonForm
                 input={comparisonInput}
                 onChangeInput={setComparisonInput}
-                onCalculate={() => {}}
+                onCalculate={handlePerformCalculation}
                 language={language}
+                subscription={subscription}
+                onOpenUpgrade={() => handleOpenCheckout('plus', 'monthly')}
               />
 
               <ComparisonResults
@@ -342,6 +444,8 @@ export const App: React.FC = () => {
                 onOpenCalculationModal={res => setSelectedCalculation(res)}
                 onSaveMandi={handleToggleSaved}
                 savedMandiIds={savedMandiIds}
+                subscription={subscription}
+                onOpenUpgrade={() => handleOpenCheckout('fpo', 'monthly')}
               />
             </div>
           )}
@@ -385,10 +489,22 @@ export const App: React.FC = () => {
               profile={profile}
               onSaveProfile={handleSaveProfile}
               language={language}
+              subscription={subscription}
+              onOpenPlans={() => handleSelectTab('plans')}
             />
           )}
 
-          {/* TAB 7: DATA SOURCES & CSV IMPORT */}
+          {/* TAB 7: SUBSCRIPTION & PLANS (NEW) */}
+          {currentTab === 'plans' && (
+            <SubscriptionPlansView
+              subscription={subscription}
+              language={language}
+              onOpenCheckout={handleOpenCheckout}
+              onSubscriptionUpdated={refreshSubscription}
+            />
+          )}
+
+          {/* TAB 8: DATA SOURCES & CSV IMPORT */}
           {currentTab === 'datasource' && (
             <div className="max-w-2xl mx-auto space-y-4">
               <div className="bg-white p-6 rounded-3xl border border-[#E1E9DC] shadow-xs">
@@ -404,7 +520,7 @@ export const App: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 8: HELP & KNOWLEDGE */}
+          {/* TAB 9: HELP & KNOWLEDGE */}
           {currentTab === 'help' && (
             <HelpFeedbackModal language={language} />
           )}
@@ -431,6 +547,25 @@ export const App: React.FC = () => {
         onClose={() => setIsDataSourceModalOpen(false)}
         language={language}
         onDataUpdated={refreshMandis}
+      />
+
+      {/* Subscription Onboarding Screen Modal */}
+      <SubscriptionOnboardingModal
+        isOpen={isOnboardingOpen}
+        onSelectPlan={handleOnboardingSelectPlan}
+        onContinueFree={handleOnboardingContinueFree}
+        language={language}
+        onLanguageChange={handleLanguageChange}
+      />
+
+      {/* Checkout & Payment Gateway Modal */}
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        tier={checkoutTier}
+        cycle={checkoutCycle}
+        language={language}
+        onClose={() => setIsCheckoutOpen(false)}
+        onSuccess={handleCheckoutSuccess}
       />
     </div>
   );

@@ -138,3 +138,64 @@ export interface NotificationItem {
   read: boolean;
   mandiId?: string;
 }
+
+/* =========================================================================
+   Subscription & Advertising Types
+   ========================================================================= */
+
+export type SubscriptionTier = 'free' | 'plus' | 'fpo';
+export type BillingCycle = 'monthly' | 'yearly';
+export type SubscriptionStatus = 'active' | 'cancelled' | 'expired' | 'grace_period';
+
+export interface UserSubscription {
+  plan: SubscriptionTier;
+  billingCycle: BillingCycle | null;
+  status: SubscriptionStatus;
+  startDate: string; // ISO date string
+  renewalDate: string | null; // ISO date string
+  cancelAtPeriodEnd: boolean;
+  dailyComparisonsUsed: number;
+  lastComparisonDate: string; // YYYY-MM-DD
+  paymentProvider: 'razorpay' | 'sandbox_test' | 'none';
+  lastTransactionId?: string;
+  lastPaymentAmount?: number;
+}
+
+export interface PlanPricing {
+  id: SubscriptionTier;
+  nameEn: string;
+  nameHi: string;
+  taglineEn: string;
+  taglineHi: string;
+  priceMonthly: number;
+  priceYearly: number;
+  badge?: string;
+  isPopular?: boolean;
+  dailyLimit: number; // e.g. 5 for free, Infinity for plus/fpo
+}
+
+export interface PlanFeatureItem {
+  id: string;
+  titleEn: string;
+  titleHi: string;
+  free: boolean | string;
+  plus: boolean | string;
+  fpo: boolean | string;
+}
+
+export interface SponsoredAdItem {
+  id: string;
+  titleEn: string;
+  titleHi: string;
+  sponsorName: string;
+  categoryEn: string;
+  categoryHi: string;
+  descriptionEn: string;
+  descriptionHi: string;
+  ctaTextEn: string;
+  ctaTextHi: string;
+  ctaLink: string;
+  phoneContact?: string;
+  icon: string;
+  verifiedGovScheme?: boolean;
+}

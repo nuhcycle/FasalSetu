@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FarmerProfile, Language, WeightUnit } from '../../types';
+import { FarmerProfile, Language, WeightUnit, UserSubscription } from '../../types';
 import { STATES_AND_DISTRICTS } from '../../data/locations';
 import { CROPS } from '../../data/crops';
 import { VEHICLE_OPTIONS } from '../../data/vehicles';
@@ -12,19 +12,26 @@ import {
   Save, 
   CheckCircle2, 
   ShieldCheck,
-  Tractor
+  Tractor,
+  CreditCard,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 
 interface MyFarmViewProps {
   profile: FarmerProfile;
   onSaveProfile: (profile: FarmerProfile) => void;
   language: Language;
+  subscription: UserSubscription;
+  onOpenPlans: () => void;
 }
 
 export const MyFarmView: React.FC<MyFarmViewProps> = ({
   profile,
   onSaveProfile,
   language,
+  subscription,
+  onOpenPlans,
 }) => {
   const t = getTranslation(language);
   const [formData, setFormData] = useState<FarmerProfile>({ ...profile });
@@ -79,6 +86,43 @@ export const MyFarmView: React.FC<MyFarmViewProps> = ({
             <span>{t.profileSavedSuccess}</span>
           </div>
         )}
+      </div>
+
+      {/* Subscription Card in Profile */}
+      <div className="bg-gradient-to-r from-white via-[#FFFDF5] to-[#F3F8EF] p-5 rounded-3xl border border-[#E9B949]/50 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-[#EBF5EE] text-[#2F6B3F] flex items-center justify-center text-xl shrink-0">
+            {subscription.plan === 'plus' ? '⭐' : subscription.plan === 'fpo' ? '🏢' : '🌾'}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-[#26352A]">
+                {subscription.plan === 'free'
+                  ? t.planBadgeFree
+                  : subscription.plan === 'plus'
+                  ? t.planBadgePlus
+                  : t.planBadgeFpo}
+              </span>
+              <span className="text-[10px] bg-white px-2 py-0.5 rounded-full border border-[#E1E9DC] font-semibold text-[#6B786D] uppercase">
+                {subscription.status}
+              </span>
+            </div>
+            <p className="text-xs text-[#6B786D] mt-0.5">
+              {subscription.plan === 'free'
+                ? `${subscription.dailyComparisonsUsed} / 5 comparisons used today`
+                : `Renews: ${subscription.renewalDate ? new Date(subscription.renewalDate).toLocaleDateString() : 'Active'}`}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onOpenPlans}
+          className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#2F6B3F] hover:bg-[#22512F] text-white text-xs font-bold shadow-xs transition-colors whitespace-nowrap"
+        >
+          <span>{subscription.plan === 'free' ? t.upgradeToPlus : t.managePlanBtn}</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* Form */}
@@ -147,7 +191,7 @@ export const MyFarmView: React.FC<MyFarmViewProps> = ({
               <label className="text-xs font-semibold text-[#26352A] block mb-1">{t.selectDistrict}</label>
               <select
                 value={formData.district}
-                onChange={e => setFormData({ ...formData, district: e.target.value })}
+                onChange={e => handleStateChange(formData.state)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[#E1E9DC] bg-[#F3F8EF]/40 text-sm font-medium focus:outline-none focus:border-[#2F6B3F]"
               >
                 {districts.map(d => (
